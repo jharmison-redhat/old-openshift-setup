@@ -164,7 +164,7 @@ if [ "$cluster_kubeconfig" ]; then
 elif [ -r "tmp/$full_cluster_name/auth/kubeconfig" ]; then
     # Everything is wonderful now (maybe)
     echo >/dev/null
-elif echo "${playbooks[*]}" | grep -qF provision; then
+elif echo "${playbooks[*]}" | grep -qF provision || echo "${playbooks[*]}" | grep -qF cluster; then
     # We'll make our own kubeconfig
     echo >/dev/null
 elif [ -r ~/.kube/config ]; then
