@@ -1,0 +1,106 @@
+---
+# This tells the playbooks to not try to include default-named vars files
+cluster_included: yes
+
+# Set to false if manipulating an RHPDS or CRC cluster
+deploy_cluster: yes
+
+################################################################################
+# OPENSHIFT INSTALLATION VARIABLES
+################################################################################
+
+# The OpenShift version to install
+# MUST BE 4.X!!!
+openshift_version: "4.6"
+
+# The AWS region (i.e. `us-east-1`)
+# Current options:
+  #~ - us-east-1
+  #~ - us-east-2
+  #~ - us-west-1
+# Please note that us-east-1 doesn't have enough elastic IPs allocated by default
+aws_region: us-east-2
+
+# Pull secret, acquired from:
+# https://cloud.redhat.com/openshift/install/pull-secret
+cloud_redhat_com_pull_secret: '{"auths":{"cloud.openshift.com":{"auth":"b3B=","email":"foo@example.com"},"quay.io":{"auth":"b3B=","email":"foo@example.com"},"registry.connect.redhat.com":{"auth":"NTI=","email":"foo@example.com"},"registry.redhat.io":{"auth":"NTI=","email":"foo@example.com"}}}'
+
+letsencrypt: yes        # Creates a LetsEncrypt wildcard and api certificate and makes it the default
+
+################################################################################
+# OTHER VARIABLES
+################################################################################
+
+create_users: yes       # You should only do this if you're not trying to deploy much of anything
+autoscale: yes          # You should only do this if you know your workload will fit on your cluster as is
+adjust_console: yes     # This changes the route for the console to `console.apps.<cluster_name>.<base_domain>` which is much shorter than the default.
+deploy_ocs: yes         # This will attempt to completely install OCS on any cloud platform
+# If not using letsencrypt, uncomment the following and provide a
+#   path to a locally-generated fullchain certificate and key that your computer
+#   trusts in PEM format if you want to bring your own certificates to the
+#   cluster. They should have a CN or Alias that matches both your cluster API
+#   and wildcard router URLs.
+# byo_cert_fullchain_path: ../tmp/fullchain.pem
+# byo_cert_key_path: ../tmp/key.pem
+
+# The name of the cluster.
+# IF PROVISIONING:
+#   This value will be in your DNS entries and should conform to valid DNS characters.
+# IF RHPDS:
+#   This should be the first part of your cluster's base address
+#   e.g. for cluster-nisky-c592.nisky-c592.example.opentlc.com, this would be
+#         cluster-nisky-c592
+# IF CRC:
+#   This should be crc
+cluster_name: openshift
+
+# The base subdomain to use for your cluster.
+# IF PROVISIONING:
+#   Example: If you set this to `example.com`, a DNS entry for `<cluster_name>.example.com` will be created
+# IF RHPDS:
+#   This should be the rest of your cluster's base address
+# IF CRC:
+#   This should be testing
+openshift_base_domain: example.com
+
+# A list of manually created users:
+manual_users:
+  - username: openshift-admin
+    password: RedHatAdmin1
+    admin: yes
+
+# The number of unprivileged users created, as a string
+number_of_users: "5"
+user_password: openshift
+
+# Generate a sequence of users
+sequence_users: |
+  {%- for username in lookup("sequence", "1-" + number_of_users + ":user%0i", wantlist=True) %}
+    - username: {{ username }}
+      password: {{ user_password }}
+  {% endfor -%}
+
+# The users to create in OpenShift
+openshift_users: '{{ manual_users + sequence_users|from_yaml }}'
+
+# The type of worker to provision (including MachineSet adjustments)
+cluster_worker_machine_type: m4.2xlarge
+# The MachineSet replicas to enable on the MachineAutoscaler
+machineset_min_replicas: 0
+machineset_max_replicas: 5
+# The number of nodes to limit the overall cluster to across all MachineSets
+cluster_max_nodes_total: 15
+# Uncomment the following to adjust the overall minimum/maximum resources for the entire cluster
+# cluster_min_cores: 8
+# cluster_max_cores: 100
+# cluster_min_ram_gb: 32
+# cluster_max_ram_gb: 256
+
+################################################################################
+# DO NOT CHANGE OR COMMENT THESE FOR ANY REASON - they're used heavily
+#   throughout the project.
+_tmp_parent: '{{ "/".join([ playbook_dir, "../tmp" ])|realpath }}'
+full_cluster_name: '{{ ".".join([ cluster_name, openshift_base_domain ]) }}'
+cluster_router: '{{ ".".join([ "apps", full_cluster_name ]) }}'
+tmp_dir: '{{ "/".join([ _tmp_parent, full_cluster_name ]) }}'
+################################################################################

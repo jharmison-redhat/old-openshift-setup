@@ -1,5 +1,0 @@
-{% for task_file in lookup('fileglob', 'templates/tasks/*.yml.j2', wantlist=true) %}
-
-{{ lookup("template", task_file) }}
-
-{% endfor %}

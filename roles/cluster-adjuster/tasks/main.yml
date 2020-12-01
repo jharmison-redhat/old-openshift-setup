@@ -15,7 +15,11 @@
   when: create_users
 
 - include_tasks: autoscale.yml
-  when: autoscale
+  when:
+  - autoscale
+  - cluster_name != "crc"
 
 - include_tasks: console.yml
-  when: adjust_console
+  when:
+  - adjust_console
+  - cluster_name != "crc"

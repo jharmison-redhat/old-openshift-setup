@@ -22,7 +22,7 @@
 
 - name: Grab the signature file
   get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-{{ openshift_version }}/sha256sum.txt.sig
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-{{ openshift_version }}/sha256sum.txt.gpg
     dest: '{{ tmp_dir }}/{{ openshift_version_minor }}-sha256sum.txt.sig'
 
 - name: Import RH key, verify signature

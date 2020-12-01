@@ -4,3 +4,5 @@ all:
   hosts:
     localhost:
       ansible_connection: local
+      kubeconfig: '{{ tmp_dir }}/auth/kubeconfig'
+      oc_cli: '{{ tmp_dir }}/oc'
