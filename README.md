@@ -2,12 +2,12 @@
 
 ---
 
-### Prerequisites
+## Prerequisites
 
 - A Linux, Mac or Windows computer able to run `bash` shell scripts.
 - An installed and configured container runtime (`docker` or `podman`) that your user has the privilege to execute within that `bash` shell.
 
-### Steps
+## Use
 
 **NOTE**: There is a folder named `cluster` created in the `vars` subdirectory referenced throughout these snippets. You can name it whatever you like and use it to isolate your cluster provisioning locally, just ensure that calls to `run-playbook.sh` use the name of that folder instead of `cluster` when the instructions say to call `./run-playbook.sh -c cluster`.
 
