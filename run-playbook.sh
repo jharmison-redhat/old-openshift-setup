@@ -59,9 +59,9 @@ EOF
         -c|--cluster=*)
             if [ "$1" == '-c' ]; then
                 shift
-                DEVSECOPS_CLUSTER="$1"
+                CLUSTER_VARS_NAME="$1"
             else
-                DEVSECOPS_CLUSTER=$(echo "$1" | cut -d= -f2-)
+                CLUSTER_VARS_NAME=$(echo "$1" | cut -d= -f2-)
             fi                                                  ;;
         -k|--kubeconfig=*)
             if [ "$1" == '-k' ]; then
@@ -87,12 +87,21 @@ EOF
     shift
 done
 
+function is_yaml_yes {
+    yes_strings=(yes Yes YES true True TRUE)
+    for yes_string in "${yes_strings[@]}"; do
+        [ "$1" = "$yes_string" ] && return 0
+    done
+    return 1
+}
+
+
 # You have to specify a cluster name, either via export or arg
-if [ -z "$DEVSECOPS_CLUSTER" ]; then
+if [ -z "$CLUSTER_VARS_NAME" ]; then
     echo -e "Error: You must specify a cluster.\n$usage" >&2
     exit 2
-elif [ ! -d "vars/$DEVSECOPS_CLUSTER" ]; then
-    echo -e "Error: You must create a subdirectory in $PWD/vars named $cluster with common.yml, devsecops.yml, and provision.yml in it (as needed by your playbooks) to pass into the container.\n$usage" >&2
+elif [ ! -d "vars/$CLUSTER_VARS_NAME" ]; then
+    echo -e "Error: You must create a subdirectory in $PWD/vars named $cluster with the necessary variable files in it (as needed by your playbooks) to pass into the container.\n$usage" >&2
     exit 3
 fi
 
@@ -119,18 +128,28 @@ fi
 # Identify our container runtime and differences in arguments between them
 if which podman &>/dev/null; then
     runtime=podman
-    run_args="-v ./tmp:/app/tmp:shared -v ./vars/$DEVSECOPS_CLUSTER:/app/vars:shared,ro --label=disable"
+    run_args="-v ./tmp:/app/tmp:shared -v ./vars/$CLUSTER_VARS_NAME:/app/vars:shared,ro --label=disable"
 elif which docker &>/dev/null; then
     runtime=docker
-    run_args="-v $PWD/tmp:/app/tmp -v $PWD/vars/$DEVSECOPS_CLUSTER:/app/vars:ro --security-opt label=disabled"
+    run_args="-v $PWD/tmp:/app/tmp -v $PWD/vars/$CLUSTER_VARS_NAME:/app/vars:ro --security-opt label=disabled"
 else
     echo "A container runtime is necessary to execute these playbooks." >&2
     echo "Please install podman or docker." >&2
     exit 1
 fi
 
+# This builds the container image with the current codebase but no bind mounts
+$runtime build . -t openshift-setup-$CLUSTER_VARS_NAME
+
+# Now it's time to figure out things about your bind mounts
+cluster_name=$(awk '/^cluster_name:/{print $2}' vars/$CLUSTER_VARS_NAME/cluster.yml)
+openshift_base_domain=$(awk '/^openshift_base_domain:/{print $2}' vars/$CLUSTER_VARS_NAME/cluster.yml)
+deploy_cluster=$(awk '/^deploy_cluster:/{print $2}' vars/$CLUSTER_VARS_NAME/cluster.yml)
+full_cluster_name="$cluster_name.$openshift_base_domain"
+mkdir -p tmp/$full_cluster_name/auth
+
 # Some operations need AWS environment variables specified.
-if echo "${playbooks[*]}" | grep -qF provision || echo "${playbooks[*]}" | grep -qF destroy; then
+if is_yaml_yes "$deploy_cluster"; then
     # If they're not exported, we'll ask for them.
     if [ -z "$AWS_ACCESS_KEY_ID" ]; then
         read -p "Enter your AWS_ACCESS_KEY_ID: " AWS_ACCESS_KEY_ID
@@ -140,19 +159,10 @@ if echo "${playbooks[*]}" | grep -qF provision || echo "${playbooks[*]}" | grep 
     fi
 fi
 
-# This builds the container image with the current codebase but no bind mounts
-$runtime build . -t devsecops-$DEVSECOPS_CLUSTER
-
-# Now it's time to figure out things about your bind mounts
-cluster_name=$(awk '/^cluster_name:/{print $2}' vars/$DEVSECOPS_CLUSTER/common.yml)
-openshift_base_domain=$(awk '/^openshift_base_domain:/{print $2}' vars/$DEVSECOPS_CLUSTER/common.yml)
-full_cluster_name="$cluster_name.$openshift_base_domain"
-mkdir -p tmp/$full_cluster_name/auth
-
 # Try to fix a borked kubeconfig for container runs
-sed -i 's/^kubeconfig:.*$/kubeconfig: '"'"'\{\{ tmp_dir \}\}\/auth\/kubeconfig'"'"'/g' vars/$DEVSECOPS_CLUSTER/common.yml &>/dev/null ||:
+sed -i 's/^kubeconfig:.*$/kubeconfig: '"'"'\{\{ tmp_dir \}\}\/auth\/kubeconfig'"'"'/g' vars/$CLUSTER_VARS_NAME/cluster.yml &>/dev/null ||:
 # Try to fix a borked oc_cli for container runs
-sed -i 's/^oc_cli:.*$/oc_cli: '"'"'\/usr\/local\/bin\/oc'"'"'/g' vars/$DEVSECOPS_CLUSTER/common.yml &>/dev/null ||:
+sed -i 's/^oc_cli:.*$/oc_cli: '"'"'\/usr\/local\/bin\/oc'"'"'/g' vars/$CLUSTER_VARS_NAME/cluster.yml &>/dev/null ||:
 
 if [ "$cluster_kubeconfig" ]; then
     if [ -r "tmp/$full_cluster_name/auth/kubeconfig" -a -z "$force_kubeconfig" ]; then
@@ -164,7 +174,7 @@ if [ "$cluster_kubeconfig" ]; then
 elif [ -r "tmp/$full_cluster_name/auth/kubeconfig" ]; then
     # Everything is wonderful now (maybe)
     echo >/dev/null
-elif echo "${playbooks[*]}" | grep -qF provision || echo "${playbooks[*]}" | grep -qF cluster; then
+elif is_yaml_yes "$deploy_cluster"; then
     # We'll make our own kubeconfig
     echo >/dev/null
 elif [ -r ~/.kube/config ]; then
@@ -190,11 +200,11 @@ for playbook in "${playbooks[@]}"; do
     # These are inherited above to account for the differences between docker
     #   and podman, specifically around how they handle SELinux (if present)
     #   and bind mounts.
-    # `devsecops-$DEVSECOPS_CLUSTER`
+    # `openshift-setup-$CLUSTER_VARS_NAME`
     # This is the name of the container image we built above
     # <everything else>
     # These are passed as args to ansible-playbook inside the container.
     $runtime run -it --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
-        --privileged ${run_args} devsecops-$DEVSECOPS_CLUSTER \
+        --privileged ${run_args} openshift-setup-$CLUSTER_VARS_NAME \
         ${args} "${extra[@]}" "$playbook" || exit $?
 done
