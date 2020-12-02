@@ -6,7 +6,7 @@ ENV AWS_SECRET_ACCESS_KEY ""
 RUN dnf -y --setopt=tsflags=nodocs update && \
     dnf -y --setopt=tsflags=nodocs install python3 python3-pip gnupg2 httpd-tools git openssh-clients && \
     dnf -y clean all --enablerepo='*'
-RUN curl http://mirror.openshift.com/pub/openshift-v4/clients/oc/latest/linux/oc.tar.gz -o /root/oc.tar.gz && \
+RUN curl https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz -o /root/oc.tar.gz && \
     tar xvzf /root/oc.tar.gz -C /usr/local/bin
 RUN pip3 install --upgrade --no-cache-dir ansible openshift jmespath git+https://github.com/RedHatGov/devsecops-api-collection.git
 RUN ansible-galaxy collection install community.kubernetes
