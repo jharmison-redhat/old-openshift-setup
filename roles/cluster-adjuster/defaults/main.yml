@@ -4,15 +4,12 @@ autoscale: true
 adjust_console: true
 
 # A list of manually created users:
-manual_users:
+manual_users: []
+
+setup_admin:
   - username: openshift-admin
     password: RedHat1
     admin: yes
-
-workshop_admin:
-  username: workshop-admin
-  password: RedHat1
-  admin: yes
 
 # The number of users created, as a string
 number_of_users: "30"
@@ -25,7 +22,7 @@ sequence_users: |
   {% endfor -%}
 
 # The users to create in OpenShift
-openshift_users: '{{ manual_users + [workshop_admin] + sequence_users|from_yaml }}'
+openshift_users: '{{ manual_users + [setup_admin] + sequence_users|from_yaml }}'
 
 # The type of worker to provision (including MachineSet adjustments)
 cluster_worker_machine_type: m4.2xlarge

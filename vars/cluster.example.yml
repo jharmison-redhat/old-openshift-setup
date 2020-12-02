@@ -63,11 +63,17 @@ cluster_name: openshift
 #   This should be testing
 openshift_base_domain: example.com
 
-# A list of manually created users:
+# A list of manually created users, adjust to your liking:
 manual_users:
-  - username: openshift-admin
-    password: RedHatAdmin1
+  - username: tom
+    password: mypassword
     admin: yes
+
+# A default admin account to use for normal operations.
+setup_admin:
+  username: openshift-admin
+  password: RedHatAdmin1
+  admin: yes
 
 # The number of unprivileged users created, as a string
 number_of_users: "5"
@@ -81,7 +87,7 @@ sequence_users: |
   {% endfor -%}
 
 # The users to create in OpenShift
-openshift_users: '{{ manual_users + sequence_users|from_yaml }}'
+openshift_users: '{{ manual_users + [setup_admin] + sequence_users|from_yaml }}'
 
 # The type of worker to provision (including MachineSet adjustments)
 cluster_worker_machine_type: m4.2xlarge
