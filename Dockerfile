@@ -15,7 +15,6 @@ RUN mkdir -p /app
 
 COPY ansible.cfg /app/ansible.cfg
 COPY inventory /app/inventory
-COPY library /app/library
 COPY roles /app/roles
 COPY playbooks /app/playbooks
 
