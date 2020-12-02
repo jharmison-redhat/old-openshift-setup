@@ -1,5 +1,9 @@
 ---
 - hosts: localhost
+  collections:
+    - community.kubernetes
+    - community.general
+
   pre_tasks:
     - name: Look for default defined cluster variables
       include_vars: ../vars/cluster.yml
