@@ -1,13 +1,13 @@
 ---
 - hosts: localhost
   pre_tasks:
-    - name: Look for default defined common variables
-      include_vars: ../vars/common.yml
-      when: common_included is not defined or not common_included
+    - name: Look for default defined variables
+      include_vars: ../vars/cluster.yml
+      when: cluster_included is not defined or not cluster_included
 
     - fail:
-        msg: Unable to continue without common variables set
-      when: common_included is not defined or not common_included
+        msg: Unable to continue without cluster variables set
+      when: cluster_included is not defined or not cluster_included
 
     - name: Set AWS_ACCESS_KEY_ID
       block:
