@@ -24,14 +24,4 @@
         storage:
           pvc:
             claim: ocs4registry
-
-- name: Remove the S3 backing store from the ImageRegistry (if it's there)
-  k8s_json_patch:
-    kubeconfig: '{{ kubeconfig }}'
-    api_version: imageregistry.operator.openshift.io/v1
-    kind: Config
-    name: cluster
-    patch:
-      - op: remove
-        path: /spec/storage/s3
-  ignore_errors: true
+          s3: null
