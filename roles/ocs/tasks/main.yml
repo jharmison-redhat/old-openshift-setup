@@ -1,6 +1,17 @@
 ---
+- name: Measure OCS MachineSets
+  k8s_info:
+    kubeconfig: '{{ kubeconfig }}'
+    api_version: machine.openshift.io/v1beta1
+    kind: MachineSet
+    namespace: openshift-machine-api
+    label_selectors:
+    - machine.openshift.io/cluster-api-machine-role = workerocs
+  register: ocs_machinesets
+
 - name: Create OCS MachineSets
   include_tasks: ocs_machines.yml
+  when: ocs_machinesets.resources|length == 0
 
 - name: Subscribe to OCS4
   k8s:
