@@ -49,13 +49,13 @@
             replica: 3
             resources: {}
 
-- name: Wait for OCS-backed StorageCluster to provide StorageClasses
+- name: Wait for OCS StorageCluster to be ready
   k8s_info:
     kubeconfig: '{{ kubeconfig }}'
     kind: StorageCluster
     namespace: openshift-storage
   register: storagecluster
-  until: storagecluster|to_json|from_json|json_query(ocs_storage_class_query)
+  until: storagecluster|to_json|from_json|json_query(ocs_ready_query)|bool
   retries: 50
   delay: 30
 

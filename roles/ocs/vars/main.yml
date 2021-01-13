@@ -1,6 +1,6 @@
 ---
 ocs_node_query: 'resources[*]|[?contains(@.metadata.annotations."machine.openshift.io/machine", `ocs-worker`)]'
 nodes_ready_query: '[].status.conditions[]|[?@.type == `Ready`].status'
-ocs_storage_class_query: 'resources[*]|[?@.status.phase == `Ready`].status.storageClassesCreated'
+ocs_ready_query: 'resources[*]|[?@.status.phase == `Ready`].status.conditions|[?@.type == `ReconcileComplete`].status'
 ocs_node_type_mapping:
   AWSMachineProviderConfig: m5.4xlarge
