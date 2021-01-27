@@ -40,6 +40,12 @@
     - include_role:
         name: cluster-adjuster
     - include_role:
+        name: pull-secret
+      when:
+      - apply_tbr_secret|default(true)
+      - terms_based_registry_pull_secret is defined
+      - terms_based_registry_pull_secret != "eyJhdXRocyI6eyJyZWdpc3RyeS5yZWRoYXQuaW8iOnsiYXV0aCI6"
+    - include_role:
         name: redhatgov-catalog
     - include_role:
         name: ocs

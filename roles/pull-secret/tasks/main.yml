@@ -1,0 +1,5 @@
+---
+- name: Add Terms Base Registry secret to openshift-config
+  k8s:
+    kubeconfig: '{{ kubeconfig }}'
+    definition: '{{ lookup("template", "pull-secret.yml.j2")|from_yaml }}'

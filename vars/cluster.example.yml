@@ -25,14 +25,21 @@ aws_region: us-east-2
 # https://cloud.redhat.com/openshift/install/pull-secret
 cloud_redhat_com_pull_secret: '{"auths":{"cloud.openshift.com":{"auth":"b3B=","email":"foo@example.com"},"quay.io":{"auth":"b3B=","email":"foo@example.com"},"registry.connect.redhat.com":{"auth":"NTI=","email":"foo@example.com"},"registry.redhat.io":{"auth":"NTI=","email":"foo@example.com"}}}'
 
+# See https://github.com/redhatgov/devsecops-workshop-dashboard#install for more information, this applies that pull secret
+apply_tbr_secret: yes   # This will apply the Terms Based Registry pull secret provided below
+terms_based_registry_pull_secret_name: pull-secret
+# Pull secret, acquired from:
+# https://access.redhat.com/terms-based-registry/
+terms_based_registry_pull_secret: eyJhdXRocyI6eyJyZWdpc3RyeS5yZWRoYXQuaW8iOnsiYXV0aCI6 # ...etc
+
 letsencrypt: yes        # Creates a LetsEncrypt wildcard and api certificate and makes it the default
 
 ################################################################################
 # OTHER VARIABLES
 ################################################################################
 
-create_users: yes       # You should only do this if you're not trying to deploy much of anything
-autoscale: yes          # You should only do this if you know your workload will fit on your cluster as is
+create_users: yes       # You should only disable this if you're not trying to deploy much of anything
+autoscale: yes          # You should only disable this if you know your workload will fit on your cluster as is
 adjust_console: yes     # This changes the route for the console to `console.apps.<cluster_name>.<base_domain>` which is much shorter than the default.
 deploy_ocs: yes         # This will attempt to completely install OCS on any cloud platform
 # If not using letsencrypt, uncomment the following and provide a
@@ -65,9 +72,11 @@ openshift_base_domain: example.com
 
 # A list of manually created users, adjust to your liking:
 manual_users:
-  - username: tom
-    password: mypassword
+  - username: admin
+    password: RedHatAdmin1
     admin: yes
+  - username: testuser
+    password: RedHatPassword1
 
 # A default admin account to use for normal operations.
 setup_admin:
