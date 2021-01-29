@@ -27,7 +27,7 @@
       metadata:
         labels:
           type: htpasswd
-        name: htpass-secret
+        name: openshift-setup-htpass-secret
       type: Opaque
       stringData:
         htpasswd: '{{ lookup("file", tmp_dir + "/users.htpasswd") }}'
@@ -51,7 +51,7 @@
           type: HTPasswd
           htpasswd:
             fileData:
-              name: htpass-secret
+              name: openshift-setup-htpass-secret
 
 - name: Enable admin on appropriate users
   k8s:
