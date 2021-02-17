@@ -13,5 +13,5 @@
 - name: Backup original kubeconfig
   copy:
     src: '{{ kubeconfig }}'
-    dsg: '{{ kubeconfig }}_ORIGINAL'
+    dest: '{{ kubeconfig }}_ORIGINAL'
   when: installer_run.changed
