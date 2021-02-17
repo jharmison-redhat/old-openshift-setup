@@ -9,7 +9,8 @@ RUN dnf -y --setopt=tsflags=nodocs update && \
     dnf -y clean all --enablerepo='*'
 RUN curl https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-client-linux.tar.gz -o /root/oc.tar.gz && \
     tar xvzf /root/oc.tar.gz -C /usr/local/bin
-RUN pip3 install --upgrade --no-cache-dir ansible openshift jmespath
+RUN pip3 install --upgrade --no-cache-dir pip setuptools wheel && \
+    pip3 install --upgrade --no-cache-dir ansible openshift jmespath
 
 # Handle requirements
 RUN mkdir -p /app
