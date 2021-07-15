@@ -43,7 +43,8 @@
         --fullchain-file '{{ certificate_path }}/fullchain.pem'
     )
     if $acme --list | grep -qF "$api_endpoint" && $acme --list | grep -qF "$wildcard_endpoint"; then
-        echo "There appears to be a cert issued already."
+        echo "There appears to be a cert issued already. Renewing any obviously expired ones."
+        $acme --renew-all
         if ! $acme --install-cert "${acme_args[@]}"; then
             echo "Unable to install the certificate. Attempting to renew."
             $acme --renew "${acme_args[@]}" --force || exit 1
