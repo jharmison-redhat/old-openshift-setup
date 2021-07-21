@@ -28,3 +28,6 @@ platform:
     region: {{ aws_region }}
 pullSecret: '{{ cloud_redhat_com_pull_secret }}'
 sshKey: {{ cluster_key.public_key }}
+{% if fips %}
+fips: true
+{%- endif %}

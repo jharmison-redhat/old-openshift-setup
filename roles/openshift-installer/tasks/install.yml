@@ -1,6 +1,7 @@
 ---
 - name: Install OpenShift on AWS
   shell: |
+    [ -f install-config.yaml ] && cp install-config.yaml install-config.yaml.orig ||:
     ./openshift-install create cluster
   args:
     chdir: '{{ tmp_dir }}'

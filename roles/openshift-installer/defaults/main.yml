@@ -6,3 +6,4 @@ cluster_worker_machine_type: m4.2xlarge
 
 letsencrypt: true
 certificate_path: '{{ tmp_dir }}/certs'
+fips: false
