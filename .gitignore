@@ -7,3 +7,4 @@ vars/*
 !vars/*.example.yml
 .aws
 .vscode
+.cache
