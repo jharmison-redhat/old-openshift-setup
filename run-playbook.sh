@@ -150,6 +150,11 @@ mkdir -p tmp/$full_cluster_name/auth
 
 # Some operations need AWS environment variables specified.
 if is_yaml_yes "$deploy_cluster"; then
+    # Source creds if available
+    if [ -f .aws ]; then
+        . .aws
+    fi
+
     # If they're not exported, we'll ask for them.
     if [ -z "$AWS_ACCESS_KEY_ID" ]; then
         read -p "Enter your AWS_ACCESS_KEY_ID: " AWS_ACCESS_KEY_ID
