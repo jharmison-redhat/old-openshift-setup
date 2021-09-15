@@ -1,7 +1,7 @@
 ---
 - name: Pull latest openshift-install release info for version
   uri:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-{{ openshift_version }}/release.txt
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/release.txt
     return_content: yes
   register: release_text
 
@@ -17,12 +17,17 @@
 
 - name: Grab the latest release checksums
   get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-{{ openshift_version }}/sha256sum.txt
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/sha256sum.txt
     dest: '{{ tmp_dir }}/{{ openshift_version_minor }}-sha256sum.txt'
+
+- name: Grab the latest helm checksums
+  get_url:
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/helm/latest/sha256sum.txt
+    dest: '{{ tmp_dir }}/helm-sha256sum.txt'
 
 - name: Grab the signature file
   get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-{{ openshift_version }}/sha256sum.txt.gpg
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/sha256sum.txt.gpg
     dest: '{{ tmp_dir }}/{{ openshift_version_minor }}-sha256sum.txt.sig'
 
 - name: Import RH key, verify signature
@@ -40,7 +45,7 @@
   register: import_key
   changed_when: '"changed" in import_key.stdout_lines'
 
-- name: Read expected sha256 for installer and client
+- name: Read expected sha256 for installer, client, and helm
   set_fact:
     openshift_install_sum: >-
       {{ (lookup('file', '{{ tmp_dir }}/{{ openshift_version_minor }}-sha256sum.txt') |
@@ -56,18 +61,43 @@
           '\.tar\.gz', multiline=true
         )).split() | first
       }}
+    helm_sum: >-
+      {{ (lookup('file', '{{ tmp_dir }}/helm-sha256sum.txt') |
+        regex_search('\n?(\S*)\s*helm-linux-amd64\.tar\.gz', multiline=true
+        )).split() | first
+      }}
 
 - name: Download latest release
   get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest-{{ openshift_version }}/openshift-{{ item.type }}-linux-{{ openshift_version_minor }}.tar.gz
+    url: '{{ deconstructed_url }}'
     checksum: sha256:{{ item.sum }}
-    dest: '{{ tmp_dir }}/openshift-{{ item.type }}.tar.gz'
+    dest: '{{ tmp_dir }}/openshift-{{ item.bin }}.tar.gz'
+  vars:
+    deconstructed_url: |-
+      https://mirror.openshift.com/pub/openshift-v4/clients/{{ item.type }}/
+      {%- if item.type == "ocp" -%}
+      stable-{{ openshift_version}}
+      {%- else -%}
+      latest
+      {%- endif -%}
+      /
+      {%- if item.type == "ocp" -%}
+      openshift-{{ item.bin }}-linux-{{ openshift_version_minor}}
+      {%- else -%}
+      {{ item.bin }}-linux-amd64
+      {%- endif -%}
+      .tar.gz
   register: downloads
   loop:
-    - type: install
+    - bin: install
       sum: '{{ openshift_install_sum }}'
-    - type: client
+      type: ocp
+    - bin: client
       sum: '{{ openshift_client_sum }}'
+      type: ocp
+    - bin: helm
+      sum: '{{ helm_sum }}'
+      type: helm
 
 - name: Remove untarred installers when an update was downloaded
   file:
@@ -76,6 +106,7 @@
   loop:
     - oc
     - openshift-install
+    - helm
   when: downloads|json_query("length(results[?changed]) > `0`")
 
 - name: Untar the archives
@@ -83,9 +114,13 @@
     remote_src: yes
     src: '{{ tmp_dir }}/openshift-{{ item.type }}.tar.gz'
     dest: '{{ tmp_dir }}/'
+    extra_opts:
+    - --no-same-owner
     creates: '{{ tmp_dir }}/{{ item.creates }}'
   loop:
     - type: install
       creates: openshift-install
     - type: client
       creates: oc
+    - type: helm
+      creates: helm
