@@ -1,8 +1,5 @@
 FROM registry.access.redhat.com/ubi8
 
-ENV AWS_ACCESS_KEY_ID ""
-ENV AWS_SECRET_ACCESS_KEY ""
-
 # Handle prereqs
 RUN dnf -y --setopt=tsflags=nodocs update && \
     dnf -y --setopt=tsflags=nodocs install python3 python3-pip gnupg2 httpd-tools git openssh-clients && \

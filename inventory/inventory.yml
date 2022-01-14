@@ -6,3 +6,10 @@ all:
       ansible_connection: local
       kubeconfig: '{{ tmp_dir }}/auth/kubeconfig'
       oc_cli: '{{ tmp_dir }}/oc'
+  vars:
+    aws_env: |-
+      {% for var, val in ansible_env.items() %}
+      {% if var.startswith("AWS_") %}
+      {{ var }}: {{ val }}
+      {% endif %}
+      {% endfor %}

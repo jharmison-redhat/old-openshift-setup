@@ -56,11 +56,9 @@
         echo "Unable to identify any issued certificates. Requesting them..."
         $acme --issue "${acme_args[@]}" || exit 1
     fi
+  environment: '{{ aws_env|from_yaml }}'
   args:
     creates: '{{ certificate_path }}/fullchain.pem'
-  environment:
-    AWS_ACCESS_KEY_ID: '{{ AWS_ACCESS_KEY_ID|default(ansible_env["AWS_ACCESS_KEY_ID"]) }}'
-    AWS_SECRET_ACCESS_KEY: '{{ AWS_SECRET_ACCESS_KEY|default(ansible_env["AWS_SECRET_ACCESS_KEY"]) }}'
 
 - name: Create the new TLS secrets
   k8s:

@@ -1,4 +1,5 @@
 tags
+tags.lock
 *.log
 *.bak
 tmp/*
@@ -8,3 +9,4 @@ vars/*
 .aws
 .vscode
 .cache
+*.swp

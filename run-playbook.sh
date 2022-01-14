@@ -1,15 +1,14 @@
 #!/bin/bash
 
-cd $(dirname $(realpath $0))
+cd "$(dirname "$(realpath "$0")")" || exit 2
 
 verbose_flag=''
 cluster_kubeconfig=''
 force_kubeconfig=''
 extra=()
 playbooks=()
-inventory=''
 
-usage="usage: $(basename $0) [-h|--help] | [-v|--verbose] [(-e |--extra=)VARS] \\
+usage="usage: $(basename "$0") [-h|--help] | [-v|--verbose] [(-e |--extra=)VARS] \\
   (-c |--cluster=)CLUSTER [-k |--kubeconfig=)FILE [-f|--force] \\
   [[path/to/]PLAY[.yml]] [PLAY[.yml]]..."
 
@@ -54,7 +53,7 @@ EOF
                 shift
                 extra+=('-e' "$1")
             else
-                extra+=('-e' $(echo "$1" | cut -d= -f2-))
+                extra+=('-e' "$(echo "$1" | cut -d= -f2-)")
             fi                                                  ;;
         -c|--cluster=*)
             if [ "$1" == '-c' ]; then
@@ -101,7 +100,7 @@ if [ -z "$CLUSTER_VARS_NAME" ]; then
     echo -e "Error: You must specify a cluster.\n$usage" >&2
     exit 2
 elif [ ! -d "vars/$CLUSTER_VARS_NAME" ]; then
-    echo -e "Error: You must create a subdirectory in $PWD/vars named $cluster with the necessary variable files in it (as needed by your playbooks) to pass into the container.\n$usage" >&2
+    echo -e "Error: You must create a subdirectory in $PWD/vars named $CLUSTER_VARS_NAME with the necessary variable files in it (as needed by your playbooks) to pass into the container.\n$usage" >&2
     exit 3
 fi
 
@@ -109,12 +108,12 @@ args="$verbose_flag"
 
 # Find a playbook if you didn't specify one
 if [ -z "${playbooks[*]}" ]; then
-    if [ $(ls playbooks/ | wc -l) -eq 1 ]; then
-        playbooks=("playbooks/$(ls playbooks/)")
+    if [ "$(find playbooks -type f -printf . | wc -c)" -eq 1 ]; then
+        playbooks=("$(find playbooks -type f)")
     else
         echo 'Choose a play to run:'
         export PS3='> '
-        select choice in $(ls playbooks/ | sed 's/\.yml//g'); do
+        select choice in $(find playbooks -type f -print0 | xargs -0n1 basename | sed 's/\.yml//g'); do
             if [ "$choice" ]; then
                 playbooks=("playbooks/${choice}.yml")
                 break
@@ -125,13 +124,22 @@ if [ -z "${playbooks[*]}" ]; then
     fi
 fi
 
-# Identify our container runtime and differences in arguments between them
+run_args=()
+# Run as our user
+run_args+=(--privileged --security-opt=label=disable)
+# Bring the tmp directory in
+run_args+=(-v "$PWD/tmp:/app/tmp")
+# Bring the cluster vars directory in
+run_args+=(-v "$PWD/vars/$CLUSTER_VARS_NAME:/app/vars:ro")
+# Bring our aws config/credentials directory in
+run_args+=(-v "$HOME/.aws:/root/.aws")
+# Forward all AWS variables into the container
+run_args+=(-e 'AWS_*')
+# Identify our container runtime
 if which podman &>/dev/null; then
     runtime=podman
-    run_args="-v ./tmp:/app/tmp:shared -v ./vars/$CLUSTER_VARS_NAME:/app/vars:shared,ro --label=disable"
 elif which docker &>/dev/null; then
     runtime=docker
-    run_args="-v $PWD/tmp:/app/tmp -v $PWD/vars/$CLUSTER_VARS_NAME:/app/vars:ro --security-opt label=disabled"
 else
     echo "A container runtime is necessary to execute these playbooks." >&2
     echo "Please install podman or docker." >&2
@@ -139,14 +147,14 @@ else
 fi
 
 # This builds the container image with the current codebase but no bind mounts
-$runtime build . -t openshift-setup-$CLUSTER_VARS_NAME
+"$runtime" build . -t "openshift-setup-$CLUSTER_VARS_NAME"
 
 # Now it's time to figure out things about your bind mounts
-cluster_name=$(awk '/^cluster_name:/{print $2}' vars/$CLUSTER_VARS_NAME/cluster.yml)
-openshift_base_domain=$(awk '/^openshift_base_domain:/{print $2}' vars/$CLUSTER_VARS_NAME/cluster.yml)
-deploy_cluster=$(awk '/^deploy_cluster:/{print $2}' vars/$CLUSTER_VARS_NAME/cluster.yml)
+cluster_name=$(awk '/^cluster_name:/{print $2}' "vars/$CLUSTER_VARS_NAME/cluster.yml")
+openshift_base_domain=$(awk '/^openshift_base_domain:/{print $2}' "vars/$CLUSTER_VARS_NAME/cluster.yml")
+deploy_cluster=$(awk '/^deploy_cluster:/{print $2}' "vars/$CLUSTER_VARS_NAME/cluster.yml")
 full_cluster_name="$cluster_name.$openshift_base_domain"
-mkdir -p tmp/$full_cluster_name/auth
+mkdir -p "tmp/$full_cluster_name/auth"
 
 # Some operations need AWS environment variables specified.
 if is_yaml_yes "$deploy_cluster"; then
@@ -154,23 +162,15 @@ if is_yaml_yes "$deploy_cluster"; then
     if [ -f .aws ]; then
         . .aws
     fi
-
-    # If they're not exported, we'll ask for them.
-    if [ -z "$AWS_ACCESS_KEY_ID" ]; then
-        read -p "Enter your AWS_ACCESS_KEY_ID: " AWS_ACCESS_KEY_ID
-    fi
-    if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
-        read -sp "Enter your AWS_SECRET_ACCESS_KEY: " AWS_SECRET_ACCESS_KEY
-    fi
 fi
 
 # Try to fix a borked kubeconfig for container runs
-sed -i 's/^kubeconfig:.*$/kubeconfig: '"'"'\{\{ tmp_dir \}\}\/auth\/kubeconfig'"'"'/g' vars/$CLUSTER_VARS_NAME/cluster.yml &>/dev/null ||:
+sed -i 's/^kubeconfig:.*$/kubeconfig: '"'"'\{\{ tmp_dir \}\}\/auth\/kubeconfig'"'"'/g' "vars/$CLUSTER_VARS_NAME/cluster.ym"l &>/dev/null ||:
 # Try to fix a borked oc_cli for container runs
-sed -i 's/^oc_cli:.*$/oc_cli: '"'"'\/usr\/local\/bin\/oc'"'"'/g' vars/$CLUSTER_VARS_NAME/cluster.yml &>/dev/null ||:
+sed -i 's/^oc_cli:.*$/oc_cli: '"'"'\/usr\/local\/bin\/oc'"'"'/g' "vars/$CLUSTER_VARS_NAME/cluster.yml" &>/dev/null ||:
 
 if [ "$cluster_kubeconfig" ]; then
-    if [ -r "tmp/$full_cluster_name/auth/kubeconfig" -a -z "$force_kubeconfig" ]; then
+    if [ -r "tmp/$full_cluster_name/auth/kubeconfig" ] && [ -z "$force_kubeconfig" ]; then
         echo "[WARN] KUBECONFIG was specified, but already exists at $(pwd)/tmp/$full_cluster_name/auth/kubeconfig" >&2
         echo "Not overwriting! If you want to overwrite it, please remove it or include the '--force' argument." >&2
     else
@@ -195,8 +195,6 @@ for playbook in "${playbooks[@]}"; do
     # `-it`
     # We also want to guarantee a TTY for possible prompts
     # `--rm`
-    # We want the containers themselves to remain ephemeral
-    # `-e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY`
     # We can just export AWS variables directly, it won't hurt
     # `--privileged`
     # We're just using the container for runtime environment, not privilege
@@ -209,7 +207,7 @@ for playbook in "${playbooks[@]}"; do
     # This is the name of the container image we built above
     # <everything else>
     # These are passed as args to ansible-playbook inside the container.
-    $runtime run -it --rm -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY \
-        --privileged ${run_args} openshift-setup-$CLUSTER_VARS_NAME \
-        ${args} "${extra[@]}" "$playbook" || exit $?
+    $runtime run -it --rm --privileged \
+        "${run_args[@]}" "openshift-setup-$CLUSTER_VARS_NAME" \
+        "${args}" "${extra[@]}" "$playbook" || exit $?
 done

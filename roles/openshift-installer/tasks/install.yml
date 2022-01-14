@@ -3,12 +3,10 @@
   shell: |
     [ -f install-config.yaml ] && cp install-config.yaml install-config.yaml.orig ||:
     ./openshift-install create cluster
+  environment: '{{ aws_env|from_yaml }}'
   args:
     chdir: '{{ tmp_dir }}'
     creates: '{{ kubeconfig }}'
-  environment:
-    AWS_ACCESS_KEY_ID: '{{ AWS_ACCESS_KEY_ID|default(ansible_env["AWS_ACCESS_KEY_ID"]) }}'
-    AWS_SECRET_ACCESS_KEY: '{{ AWS_SECRET_ACCESS_KEY|default(ansible_env["AWS_SECRET_ACCESS_KEY"]) }}'
   register: installer_run
 
 - name: Backup original kubeconfig

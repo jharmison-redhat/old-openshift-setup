@@ -84,8 +84,6 @@ Additionally, you can do any portion of the following the following to skip havi
 
 ```shell
 export DEVSECOPS_CLUSTER=personal                                                # The cluster name for vars directory and container image name
-export AWS_ACCESS_KEY_ID=<YOUR ACTUAL AWS_ACCESS_KEY_ID>                         # Your actual AWS_ACCESS_KEY_ID, which you would otherwise be prompted for if provisioning/destroying a cluster
-export AWS_SECRET_ACCESS_KEY=<YOUR ACTUAL AWS_SECRET_ACCESS_KEY>                 # Your actual AWS_SECRET_ACCESS_KEY, which you would otherwise be prompted for if provisioning/destroying a cluster
 ./run-playbook.sh cluster
 #                    ^--this is just a playbook name, present in playbooks/*.yml
 ```
