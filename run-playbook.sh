@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -x
+
 cd "$(dirname "$(realpath "$0")")" || exit 2
 
 verbose_flag=''
@@ -209,5 +211,5 @@ for playbook in "${playbooks[@]}"; do
     # These are passed as args to ansible-playbook inside the container.
     $runtime run -it --rm --privileged \
         "${run_args[@]}" "openshift-setup-$CLUSTER_VARS_NAME" \
-        "${args}" "${extra[@]}" "$playbook" || exit $?
+        ${args} "${extra[@]}" "$playbook" || exit $?
 done
