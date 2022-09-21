@@ -76,25 +76,6 @@
       {% endif %}
       {% endfor %}
 
-# This is easier than jumping through API hoops myself to get to the token.
-- name: Login with a new admin to cache that token
-  shell: |
-    export KUBECONFIG='{{ kubeconfig }}'
-    oc='{{ oc_cli }}'
-    admin_user='{{ setup_admin.username }}'
-    admin_password='{{ setup_admin.password }}'
-    if [ $($oc --insecure-skip-tls-verify=true whoami) != "$admin_user" ]; then
-        $oc login --insecure-skip-tls-verify=true -u "$admin_user" -p "$admin_password" && echo changed || echo failed
-    else
-        echo ok
-    fi
-  register: oc_login
-  changed_when: oc_login.stdout_lines|last == "changed"
-  failed_when: oc_login.stdout_lines|last == "failed"
-  until: not oc_login.failed
-  retries: 5
-  delay: 30
-
 - name: Delete the generated kubeadmin secrets
   k8s:
     state: absent
