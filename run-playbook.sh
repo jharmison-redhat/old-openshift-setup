@@ -126,6 +126,9 @@ if [ -z "${playbooks[*]}" ]; then
     fi
 fi
 
+# Bring our aws config/credentials directory in
+[ -d $HOME/.aws ] && cp -na $HOME/.aws tmp/
+
 run_args=()
 # Run as our user
 run_args+=(--privileged --security-opt=label=disable)
@@ -133,8 +136,6 @@ run_args+=(--privileged --security-opt=label=disable)
 run_args+=(-v "$PWD/tmp:/app/tmp")
 # Bring the cluster vars directory in
 run_args+=(-v "$PWD/vars/$CLUSTER_VARS_NAME:/app/vars:ro")
-# Bring our aws config/credentials directory in
-run_args+=(-v "$HOME/.aws:/root/.aws")
 # Forward all AWS variables into the container
 run_args+=(-e 'AWS_*')
 # Identify our container runtime
@@ -159,8 +160,6 @@ full_cluster_name="$cluster_name.$openshift_base_domain"
 mkdir -p "tmp/$full_cluster_name/auth"
 
 # Some operations need AWS environment variables specified.
-[ -d $HOME/.aws ] || mkdir -p $HOME/.aws
-
 if is_yaml_yes "$deploy_cluster"; then
     # Source creds if available
     if [ -f .aws ]; then
