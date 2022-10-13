@@ -1,12 +1,11 @@
-FROM registry.access.redhat.com/ubi8
+FROM registry.access.redhat.com/ubi9
 
 # Handle prereqs
-RUN INSTALL_PKGS="python39 python39-setuptools python39-pip \
+RUN INSTALL_PKGS="python3 python3-setuptools python3-pip \
         gnupg2 httpd-tools git openssh-clients" && \
     dnf -y --setopt=tsflags=nodocs update && \
     dnf -y --setopt=tsflags=nodocs install ${INSTALL_PKGS} && \
     dnf -y clean all --enablerepo='*' && \
-    alternatives --set python /usr/bin/python3 && \
     ln -sf /app/vars/.aws /root/.aws
 
 COPY requirements.txt /app/requirements.txt
