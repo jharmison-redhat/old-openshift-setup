@@ -210,7 +210,7 @@ for playbook in "${playbooks[@]}"; do
     # This is the name of the container image we built above
     # <everything else>
     # These are passed as args to ansible-playbook inside the container.
-    $runtime run -it --rm --privileged \
+    $runtime run -it --rm \
         "${run_args[@]}" "openshift-setup-$CLUSTER_VARS_NAME" \
         ${args} "${extra[@]}" "$playbook" || exit $?
 done
