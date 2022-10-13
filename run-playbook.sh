@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -x
+# set -x
 
 cd "$(dirname "$(realpath "$0")")" || exit 2
 
@@ -102,7 +102,7 @@ if [ -z "$CLUSTER_VARS_NAME" ]; then
     echo -e "Error: You must specify a cluster.\n$usage" >&2
     exit 2
 elif [ ! -d "vars/$CLUSTER_VARS_NAME" ]; then
-    echo -e "Error: You must create a subdirectory in $PWD/vars named $CLUSTER_VARS_NAME with the necessary variable files in it (as needed by your playbooks) to pass into the container.\n$usage" >&2
+    echo -e "Error: You must create a subdirectory in $PWD/vars/$CLUSTER_VARS_NAME with the necessary variable files in it (as needed by your playbooks) to pass into the container.\n$usage" >&2
     exit 3
 fi
 
