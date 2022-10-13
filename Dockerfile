@@ -6,7 +6,7 @@ RUN INSTALL_PKGS="python39 python39-setuptools python39-pip \
     dnf -y --setopt=tsflags=nodocs update && \
     dnf -y --setopt=tsflags=nodocs install ${INSTALL_PKGS} && \
     dnf -y clean all --enablerepo='*' && \
-    ln -sf "$(which python3)" /usr/libexec/platform-python && \
+    alternatives --set python /usr/bin/python3 && \
     ln -sf /app/vars/.aws /root/.aws
 
 COPY requirements.txt /app/requirements.txt
