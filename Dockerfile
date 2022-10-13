@@ -24,6 +24,9 @@ COPY inventory /app/inventory
 COPY playbooks /app/playbooks
 COPY roles /app/roles
 
+VOLUME /app/var
+VOLUME /app/tmp
+
 # You should bind-mount your own tmp and vars dirs for playbook persistence.
 
 ENTRYPOINT ["ansible-playbook"]
