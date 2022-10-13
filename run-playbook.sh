@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# set -x
+set -x
 
 cd "$(dirname "$(realpath "$0")")" || exit 2
 
@@ -159,6 +159,8 @@ full_cluster_name="$cluster_name.$openshift_base_domain"
 mkdir -p "tmp/$full_cluster_name/auth"
 
 # Some operations need AWS environment variables specified.
+[ -d $HOME/.aws ] || mkdir -p $HOME/.aws
+
 if is_yaml_yes "$deploy_cluster"; then
     # Source creds if available
     if [ -f .aws ]; then
