@@ -5,7 +5,8 @@ RUN INSTALL_PKGS="python39 python39-setuptools python39-pip \
         gnupg2 httpd-tools git openssh-clients" && \
     dnf -y --setopt=tsflags=nodocs update && \
     dnf -y --setopt=tsflags=nodocs install ${INSTALL_PKGS} && \
-    dnf -y clean all --enablerepo='*'
+    dnf -y clean all --enablerepo='*' && \
+    ln -sf "$(which python3)" /usr/libexec/platform-python
 
 COPY requirements.txt /app/requirements.txt
 RUN pip3 install --upgrade --no-cache-dir pip setuptools wheel && \
