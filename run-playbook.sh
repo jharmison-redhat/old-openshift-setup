@@ -127,7 +127,7 @@ if [ -z "${playbooks[*]}" ]; then
 fi
 
 # Bring our aws config/credentials directory in
-[ -d $HOME/.aws ] && cp -na $HOME/.aws tmp/
+[ -d $HOME/.aws ] && cp -na $HOME/.aws vars/$CLUSTER_VARS_NAME/
 
 run_args=()
 # Run as our user

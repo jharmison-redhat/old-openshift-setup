@@ -7,7 +7,7 @@ RUN INSTALL_PKGS="python39 python39-setuptools python39-pip \
     dnf -y --setopt=tsflags=nodocs install ${INSTALL_PKGS} && \
     dnf -y clean all --enablerepo='*' && \
     ln -sf "$(which python3)" /usr/libexec/platform-python && \
-    ln -sf /app/tmp/.aws /root/.aws
+    ln -sf /app/vars/.aws /root/.aws
 
 COPY requirements.txt /app/requirements.txt
 RUN pip3 install --upgrade --no-cache-dir pip setuptools wheel && \
@@ -26,8 +26,8 @@ COPY inventory /app/inventory
 COPY playbooks /app/playbooks
 COPY roles /app/roles
 
-VOLUME /app/var
 VOLUME /app/tmp
+VOLUME /app/vars
 
 # You should bind-mount your own tmp and vars dirs for playbook persistence.
 
