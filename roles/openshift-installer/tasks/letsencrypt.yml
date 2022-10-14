@@ -42,6 +42,9 @@
         --ca-file '{{ certificate_path }}/ca.pem'
         --fullchain-file '{{ certificate_path }}/fullchain.pem'
     )
+    # fix: ZeroSSL now default
+    # https://github.com/acmesh-official/acme.sh/issues/3472
+    $acme --set-default-ca --server letsencrypt 
     if $acme --list | grep -qF "$api_endpoint" && $acme --list | grep -qF "$wildcard_endpoint"; then
         echo "There appears to be a cert issued already. Renewing any obviously expired ones."
         $acme --renew-all
