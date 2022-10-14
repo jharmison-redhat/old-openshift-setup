@@ -41,7 +41,7 @@ letsencrypt: yes        # Creates a LetsEncrypt wildcard and api certificate and
 create_users: yes       # You should only disable this if you're not trying to deploy much of anything
 autoscale: yes          # You should only disable this if you know your workload will fit on your cluster as is
 adjust_console: yes     # This changes the route for the console to `console.apps.<cluster_name>.<base_domain>` which is much shorter than the default.
-deploy_ocs: yes         # This will attempt to completely install OCS on any cloud platform
+deploy_ocs: no         # This will attempt to completely install OCS on any cloud platform
 # If not using letsencrypt, uncomment the following and provide a
 #   path to a locally-generated fullchain certificate and key that your computer
 #   trusts in PEM format if you want to bring your own certificates to the
