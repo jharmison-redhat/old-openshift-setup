@@ -1,9 +1,5 @@
 ---
 - hosts: localhost
-  collections:
-    - community.kubernetes
-    - community.general
-
   pre_tasks:
     - name: Look for default defined cluster variables
       include_vars: ../vars/cluster.yml
@@ -31,8 +27,3 @@
         name: redhatgov-catalog
       when:
       - deploy_catalog|default(true)
-    - include_role:
-        name: ocs
-      when:
-      - deploy_ocs|default(true)
-      - cluster_name != "crc"

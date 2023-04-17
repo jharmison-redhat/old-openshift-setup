@@ -1,0 +1,21 @@
+---
+- name: Apply the OpenShift metrics config for storage
+  kubernetes.core.k8s:
+    state: present
+    kubeconfig: '{{ kubeconfig }}'
+    definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-monitoring-config
+        namespace: openshift-monitoring
+      data:
+        config.yaml: |
+          prometheusK8s:
+            volumeClaimTemplate:
+              spec:
+                storageClassName: {{ metrics_storage_class }}
+                volumeMode: Filesystem
+                resources:
+                  requests:
+                    storage: 40Gi

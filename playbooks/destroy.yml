@@ -1,9 +1,5 @@
 ---
 - hosts: localhost
-  collections:
-    - community.kubernetes
-    - community.general
-
   pre_tasks:
     - name: Look for default defined variables
       include_vars: ../vars/cluster.yml
@@ -29,7 +25,7 @@
       register: destroy_tmp
 
     - name: Destroy the cluster
-      shell: |
+      ansible.builtin.shell: |
         export KUBECONFIG='{{ tmp_dir }}/auth/kubeconfig'
         ./openshift-install destroy cluster
       environment: '{{ aws_env|from_yaml }}'
@@ -40,7 +36,7 @@
         - destroy_cluster.user_input.strip()|upper == 'Y'
 
     - name: Delete tmp directory
-      file:
+      ansible.builtin.file:
         path: '{{ tmp_dir }}'
         state: absent
       when:

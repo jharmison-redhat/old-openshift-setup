@@ -1,7 +1,8 @@
 ---
 create_users: true
 autoscale: true
-adjust_console: true
+add_metrics_storage: true
+metrics_storage_class: gp3-csi
 
 # A list of manually created users:
 manual_users: []
@@ -25,7 +26,7 @@ sequence_users: |
 openshift_users: '{{ manual_users + [setup_admin] + sequence_users|from_yaml }}'
 
 # The type of worker to provision (including MachineSet adjustments)
-cluster_worker_machine_type: m4.2xlarge
+cluster_worker_machine_type: m6i.2xlarge
 # The MachineSet replicas to enable on the MachineAutoscaler
 machineset_min_replicas: 0
 machineset_max_replicas: 5

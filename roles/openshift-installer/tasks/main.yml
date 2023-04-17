@@ -1,6 +1,6 @@
 ---
 - name: Ensure that the cluster tmp directory exists
-  file:
+  ansible.builtin.file:
     path: '{{ tmp_dir }}'
     state: directory
 

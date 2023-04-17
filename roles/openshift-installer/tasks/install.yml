@@ -1,6 +1,6 @@
 ---
 - name: Install OpenShift on AWS
-  shell: |
+  ansible.builtin.shell: |
     [ -f install-config.yaml ] && cp install-config.yaml install-config.yaml.orig ||:
     ./openshift-install create cluster
   environment: '{{ aws_env|from_yaml }}'
@@ -10,7 +10,7 @@
   register: installer_run
 
 - name: Backup original kubeconfig
-  copy:
+  ansible.builtin.copy:
     src: '{{ kubeconfig }}'
     dest: '{{ kubeconfig }}_ORIGINAL'
   when: installer_run.changed

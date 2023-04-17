@@ -1,6 +1,6 @@
 ---
 - name: Create the new TLS secrets
-  k8s:
+  kubernetes.core.k8s:
     state: present
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-ingress
@@ -17,7 +17,7 @@
           {{ lookup("file", byo_cert_key_path) }}
 
 - name: Update ingress controller to use new certs
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-ingress-operator
     merge_type: merge

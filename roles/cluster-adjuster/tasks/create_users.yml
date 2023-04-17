@@ -1,6 +1,6 @@
 ---
 - name: Create/update htpasswd file for users
-  shell: |
+  ansible.builtin.shell: |
     cd {{ tmp_dir }}
     [ -f users.htpasswd ] || touch users.htpasswd
     if htpasswd -v -b users.htpasswd '{{ user.username }}' '{{ user.password }}' &>/dev/null; then
@@ -17,7 +17,7 @@
     label: '{{ user.username }}'
 
 - name: Create/update the htpasswd secret
-  k8s:
+  kubernetes.core.k8s:
     state: present
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-config
@@ -33,7 +33,7 @@
         htpasswd: '{{ lookup("file", tmp_dir + "/users.htpasswd") }}'
 
 - name: Create/update OAuth CR
-  k8s:
+  kubernetes.core.k8s:
     state: present
     kubeconfig: '{{ kubeconfig }}'
     apply: yes
@@ -54,7 +54,7 @@
               name: openshift-setup-htpass-secret
 
 - name: Enable admin on appropriate users
-  k8s:
+  kubernetes.core.k8s:
     state: present
     kubeconfig: '{{ kubeconfig }}'
     apply: yes
@@ -77,7 +77,7 @@
       {% endfor %}
 
 - name: Delete the generated kubeadmin secrets
-  k8s:
+  kubernetes.core.k8s:
     state: absent
     kubeconfig: '{{ kubeconfig }}'
     apply: yes
@@ -90,7 +90,7 @@
   when: full_cluster_name != "crc.testing"
 
 - name: Create User objects for each HTPasswd user
-  k8s:
+  kubernetes.core.k8s:
     state: present
     kubeconfig: '{{ kubeconfig }}'
     apply: yes

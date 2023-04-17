@@ -1,37 +1,37 @@
 ---
 - name: Pull latest openshift-install release info for version
-  uri:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/release.txt
+  ansible.builtin.uri:
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ openshift_channel }}-{{ openshift_version }}/release.txt
     return_content: yes
   register: release_text
 
 - name: Identify minor release version
-  set_fact:
+  ansible.builtin.set_fact:
     openshift_version_minor: |-
       {{ (release_text.content|regex_search('\nName:\s*4\S*', multiline=true)).split()|last }}
 
 - name: Grab the signing key
-  get_url:
+  ansible.builtin.get_url:
     url: https://www.redhat.com/security/fd431d51.txt
     dest: '{{ _tmp_parent }}/rh_key.txt'
 
 - name: Grab the latest release checksums
-  get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/sha256sum.txt
+  ansible.builtin.get_url:
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ openshift_channel }}-{{ openshift_version }}/sha256sum.txt
     dest: '{{ tmp_dir }}/{{ openshift_version_minor }}-sha256sum.txt'
 
 - name: Grab the latest helm checksums
-  get_url:
+  ansible.builtin.get_url:
     url: https://mirror.openshift.com/pub/openshift-v4/clients/helm/latest/sha256sum.txt
     dest: '{{ tmp_dir }}/helm-sha256sum.txt'
 
 - name: Grab the signature file
-  get_url:
-    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-{{ openshift_version }}/sha256sum.txt.gpg
+  ansible.builtin.get_url:
+    url: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/{{ openshift_channel }}-{{ openshift_version }}/sha256sum.txt.gpg
     dest: '{{ tmp_dir }}/{{ openshift_version_minor }}-sha256sum.txt.sig'
 
 - name: Import RH key, verify signature
-  shell: |
+  ansible.builtin.shell: |
     trust_key() {
         echo -e '5\ny\n' | gpg --command-fd 0 --edit-key security@redhat.com trust
         gpg --update-trustdb
@@ -46,7 +46,7 @@
   changed_when: '"changed" in import_key.stdout_lines'
 
 - name: Read expected sha256 for installer, client, and helm
-  set_fact:
+  ansible.builtin.set_fact:
     openshift_install_sum: >-
       {{ (lookup('file', '{{ tmp_dir }}/{{ openshift_version_minor }}-sha256sum.txt') |
         regex_search('\n?(\S*)\s*openshift-install-linux-' +
@@ -68,7 +68,7 @@
       }}
 
 - name: Download latest release
-  get_url:
+  ansible.builtin.get_url:
     url: '{{ deconstructed_url }}'
     checksum: sha256:{{ item.sum }}
     dest: '{{ tmp_dir }}/openshift-{{ item.bin }}.tar.gz'
@@ -76,13 +76,13 @@
     deconstructed_url: |-
       https://mirror.openshift.com/pub/openshift-v4/clients/{{ item.type }}/
       {%- if item.type == "ocp" -%}
-      stable-{{ openshift_version}}
+      {{ openshift_channel }}-{{ openshift_version }}
       {%- else -%}
       latest
       {%- endif -%}
       /
       {%- if item.type == "ocp" -%}
-      openshift-{{ item.bin }}-linux-{{ openshift_version_minor}}
+      openshift-{{ item.bin }}-linux-{{ openshift_version_minor }}
       {%- else -%}
       {{ item.bin }}-linux-amd64
       {%- endif -%}
@@ -100,7 +100,7 @@
       type: helm
 
 - name: Remove untarred installers when an update was downloaded
-  file:
+  ansible.builtin.file:
     path: '{{ tmp_dir }}/{{ item }}'
     state: absent
   loop:
@@ -110,7 +110,7 @@
   when: downloads|json_query("length(results[?changed]) > `0`")
 
 - name: Untar the archives
-  unarchive:
+  ansible.builtin.unarchive:
     remote_src: yes
     src: '{{ tmp_dir }}/openshift-{{ item.type }}.tar.gz'
     dest: '{{ tmp_dir }}/'

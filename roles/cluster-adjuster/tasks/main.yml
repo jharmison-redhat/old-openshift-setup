@@ -1,6 +1,6 @@
 ---
 - name: Ensure that the cluster tmp directory exists
-  file:
+  ansible.builtin.file:
     path: '{{ tmp_dir }}'
     state: directory
 
@@ -16,10 +16,10 @@
 
 - include_tasks: autoscale.yml
   when:
-  - autoscale
+  - autoscale|bool
   - cluster_name != "crc"
 
-- include_tasks: console.yml
+- include_tasks: metrics_storage.yml
   when:
-  - adjust_console
+  - add_metrics_storage|bool
   - cluster_name != "crc"

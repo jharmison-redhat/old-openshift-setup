@@ -25,6 +25,9 @@ aws_region: us-east-2
 # https://cloud.redhat.com/openshift/install/pull-secret
 cloud_redhat_com_pull_secret: '{"auths":{"cloud.openshift.com":{"auth":"b3B=","email":"foo@example.com"},"quay.io":{"auth":"b3B=","email":"foo@example.com"},"registry.connect.redhat.com":{"auth":"NTI=","email":"foo@example.com"},"registry.redhat.io":{"auth":"NTI=","email":"foo@example.com"}}}'
 
+# Set to a number of workers to be divided between your AZs
+cluster_initial_worker_count: 2
+
 # See https://github.com/redhatgov/devsecops-workshop-dashboard#install for more information, this applies that pull secret
 apply_tbr_secret: yes   # This will apply the Terms Based Registry pull secret provided below
 terms_based_registry_pull_secret_name: pull-secret
@@ -40,8 +43,9 @@ letsencrypt: yes        # Creates a LetsEncrypt wildcard and api certificate and
 
 create_users: yes       # You should only disable this if you're not trying to deploy much of anything
 autoscale: yes          # You should only disable this if you know your workload will fit on your cluster as is
-adjust_console: yes     # This changes the route for the console to `console.apps.<cluster_name>.<base_domain>` which is much shorter than the default.
-deploy_ocs: yes         # This will attempt to completely install OCS on any cloud platform
+add_metrics_storage: yes # You should only disable this if you don't want presistent metrics (and to be free of Insights warnings)
+deploy_catalog: yes     # Disable if you don't want the RedHatGov Operator Catalog applied to your cluster
+metrics_storage_class: gp3-csi # You should update this to some storageclass available in your default deployment (else disable)
 # If not using letsencrypt, uncomment the following and provide a
 #   path to a locally-generated fullchain certificate and key that your computer
 #   trusts in PEM format if you want to bring your own certificates to the
@@ -99,7 +103,7 @@ sequence_users: |
 openshift_users: '{{ manual_users + [setup_admin] + sequence_users|from_yaml }}'
 
 # The type of worker to provision (including MachineSet adjustments)
-cluster_worker_machine_type: m4.2xlarge
+cluster_worker_machine_type: m6i.2xlarge
 # The MachineSet replicas to enable on the MachineAutoscaler
 machineset_min_replicas: 0
 machineset_max_replicas: 5

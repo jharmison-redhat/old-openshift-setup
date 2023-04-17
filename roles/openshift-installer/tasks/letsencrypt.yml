@@ -1,16 +1,16 @@
 ---
 - name: Download acme.sh
-  git:
+  ansible.builtin.git:
     repo: https://github.com/neilpang/acme.sh
     dest: '{{ _tmp_parent }}/acme.sh'
 
 - name: Ensure certificate directory exists
-  file:
+  ansible.builtin.file:
     path: '{{ certificate_path }}'
     state: directory
 
 - name: Get necessary certs
-  shell: |
+  ansible.builtin.shell: |
     export KUBECONFIG='{{ kubeconfig }}'
     oc='{{ oc_cli }}'
 
@@ -61,7 +61,7 @@
     creates: '{{ certificate_path }}/fullchain.pem'
 
 - name: Create the new TLS secrets
-  k8s:
+  kubernetes.core.k8s:
     state: present
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-ingress
@@ -78,7 +78,7 @@
           {{ lookup("file", certificate_path + "/key.pem") }}
 
 - name: Update ingress controller to use new certs
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-ingress-operator
     merge_type: merge

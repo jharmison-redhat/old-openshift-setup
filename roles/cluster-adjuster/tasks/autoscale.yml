@@ -1,6 +1,6 @@
 ---
 - name: Recover existing machinesets
-  k8s_info:
+  kubernetes.core.k8s_info:
     kubeconfig: '{{ kubeconfig }}'
     api_version: machine.openshift.io/v1beta1
     kind: MachineSet
@@ -8,21 +8,21 @@
   register: machinesets
 
 - name: Adjust machineset instancetype
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-machine-api
     merge_type: merge
     definition: '{{ lookup("template", "machinesets.yml.j2")|from_yaml }}'
 
 - name: Create MachineAutoscaler for each machineset
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-machine-api
     apply: yes
     definition: '{{ lookup("template", "machine_autoscaler.yml.j2")|from_yaml }}'
 
 - name: Create ClusterAutoscaler
-  k8s:
+  kubernetes.core.k8s:
     kubeconfig: '{{ kubeconfig }}'
     namespace: openshift-machine-api
     apply: yes

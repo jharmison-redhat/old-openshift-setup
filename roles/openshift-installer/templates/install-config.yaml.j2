@@ -6,7 +6,7 @@ compute:
   platform:
     aws:
       type: '{{ cluster_worker_machine_type }}'
-  replicas: 2
+  replicas: {{ cluster_initial_worker_count }}
 controlPlane:
   hyperthreading: Enabled
   name: master

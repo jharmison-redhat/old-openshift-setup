@@ -1,6 +1,6 @@
 ---
 - name: Generate an SSH key for use with the cluster
-  openssh_keypair:
+  community.crypto.openssh_keypair:
     path: '{{ key_pair_path }}'
     size: 4096
     mode: 0600
@@ -8,7 +8,7 @@
   register: cluster_key
 
 - name: Register the keypair with the SSH agent
-  shell: |
+  ansible.builtin.shell: |
     eval "$(ssh-agent)"
     if ! ssh-add -l | grep -qF 'openshift-setup@{{ full_cluster_name }}'; then
         ssh-add {{ key_pair_path }} &>/dev/null && echo changed || echo failed
@@ -25,12 +25,12 @@
   failed_when: ssh_add.stdout_lines|last == 'failed'
 
 - name: Check for existing kubeconfig
-  stat:
+  ansible.builtin.stat:
     path: '{{ kubeconfig }}'
   register: kubeconfig_file
 
 - name: Template install-config
-  template:
+  ansible.builtin.template:
     src: install-config.yaml.j2
     dest: '{{ tmp_dir }}/install-config.yaml'
   when: not kubeconfig_file.stat.exists
