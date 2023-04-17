@@ -1,5 +1,7 @@
 ---
 - hosts: localhost
+  vars_files:
+  - ../vars/cluster.yml
   vars_prompt:
   - name: destroy_cluster
     prompt: 'Do you want to destroy {{ full_cluster_name }} (y/n default: N)?'
@@ -8,10 +10,6 @@
     prompt: 'Do you want to remove {{ tmp_dir }} as well (y/n default: N)?'
     private: false
   pre_tasks:
-    - name: Look for default defined variables
-      include_vars: ../vars/cluster.yml
-      when: cluster_included is not defined or not cluster_included
-
     - fail:
         msg: Unable to continue without cluster variables set
       when: cluster_included is not defined or not cluster_included
