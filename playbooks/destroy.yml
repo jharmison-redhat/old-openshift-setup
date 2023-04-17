@@ -1,5 +1,12 @@
 ---
 - hosts: localhost
+  vars_prompt:
+  - name: destroy_cluster
+    prompt: 'Do you want to destroy {{ full_cluster_name }} (y/n default: N)?'
+    private: false
+  - name: destroy_tmp
+    prompt: 'Do you want to remove {{ tmp_dir }} as well (y/n default: N)?'
+    private: false
   pre_tasks:
     - name: Look for default defined variables
       include_vars: ../vars/cluster.yml
@@ -10,20 +17,6 @@
       when: cluster_included is not defined or not cluster_included
 
   tasks:
-    - name: Ensure we're destroying the right cluster
-      pause:
-        prompt: |-
-
-          Do you want to destroy {{ full_cluster_name }} (y/n Default: N)?
-      register: destroy_cluster
-
-    - name: Determine if we should delete the tmp directory
-      pause:
-        prompt: |-
-
-          Do you want to remove {{ tmp_dir }} as well (y/n Default: N)?
-      register: destroy_tmp
-
     - name: Destroy the cluster
       ansible.builtin.shell: |
         export KUBECONFIG='{{ tmp_dir }}/auth/kubeconfig'
@@ -33,11 +26,12 @@
         chdir: '{{ tmp_dir }}'
         removes: '{{ tmp_dir }}/auth/kubeconfig'
       when:
-        - destroy_cluster.user_input.strip()|upper == 'Y'
+        - destroy_cluster.strip()|upper == 'Y'
 
     - name: Delete tmp directory
       ansible.builtin.file:
         path: '{{ tmp_dir }}'
         state: absent
       when:
-        - destroy_tmp.user_input.strip()|upper == "Y"
+        - destroy_cluster.strip()|upper == 'Y'
+        - destroy_tmp.strip()|upper == "Y"
